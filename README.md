@@ -17,8 +17,8 @@ This sample application has the following features:
 - Provides a simple Data Set viewer: open a data set from SAS library, apply a filter (WHERE= option)
 
 ## Screen shots
-![main form](https://github.com/cjdinger/SasHarness/blob/master/main.png "Main screen example")
-![data grid view](https://github.com/cjdinger/SasHarness/blob/master/datagrid.png "Data grid example")
+![main form](https://github.com/cjdinger/SasHarness/raw/master/main.png "Main screen example")
+![data grid view](https://github.com/cjdinger/SasHarness/raw/master/datagrid.png "Data grid example")
 
 For more details, see the sasCommunity page for this paper:
 [Create Your Own Client Apps Using SAS Integration Technologies](http://www.sascommunity.org/wiki/Create_Your_Own_Client_Apps_Using_SAS_Integration_Technologies)
