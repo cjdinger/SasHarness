@@ -38,6 +38,12 @@ namespace SasHarness
         /// </summary>
         public bool UseLocal { get; set; }
 
+        // Use the ObjectKeeper, which keeps track of SAS Workspaces
+        // We need this so that the OLE DB provider can find the workspace to
+        // connect to if/when the user opens a data set to view
+        internal static SASObjectManager.ObjectKeeper objectKeeper =
+            new SASObjectManager.ObjectKeeper();
+
         /// <summary>
         /// Property for the SAS Workspace connection.
         /// Will connect if needed.
@@ -73,6 +79,10 @@ namespace SasHarness
         public void Close()
         {
             if (IsConnected) _workspace.Close();
+            
+            // clear out the ObjectKeeper
+            objectKeeper.RemoveAllObjects();
+
             _workspace = null;
         }
 
@@ -93,17 +103,24 @@ namespace SasHarness
         public static SasServer FromXml(string xml)
         {
             SasServer s = new SasServer();
-            XElement settings = XElement.Parse(xml);
-            if (settings.Attribute("name") != null)
-                s.Name = settings.Attribute("name").Value;
-            if (settings.Attribute("host") != null)
-                s.Host = settings.Attribute("host").Value;
-            if (settings.Attribute("port") != null)
-                s.Port = settings.Attribute("port").Value;
-            if (settings.Attribute("userid") != null)
-                s.UserId = settings.Attribute("userid").Value;
-            if (settings.Attribute("useLocal") != null)
-                s.UseLocal = XmlConvert.ToBoolean(settings.Attribute("useLocal").Value);
+            try
+            {
+                XElement settings = XElement.Parse(xml);
+                if (settings.Attribute("name") != null)
+                    s.Name = settings.Attribute("name").Value;
+                if (settings.Attribute("host") != null)
+                    s.Host = settings.Attribute("host").Value;
+                if (settings.Attribute("port") != null)
+                    s.Port = settings.Attribute("port").Value;
+                if (settings.Attribute("userid") != null)
+                    s.UserId = settings.Attribute("userid").Value;
+                if (settings.Attribute("useLocal") != null)
+                    s.UseLocal = XmlConvert.ToBoolean(settings.Attribute("useLocal").Value);
+            }
+            catch (System.Exception)
+            {
+                // no need to bomb if this goes poorly because of bad XML
+            }
 
             return s;
         }
@@ -117,7 +134,7 @@ namespace SasHarness
             if (_workspace != null)
                 try
                 {
-                    _workspace.Close();
+                    Close();
                 }
                 catch { }
                 finally
@@ -136,11 +153,23 @@ namespace SasHarness
                 obServer.Protocol = SASObjectManager.Protocols.ProtocolBridge;
                 obServer.Port = Convert.ToInt32(Port);
                 obServer.ClassIdentifier = "440196d4-90f0-11d0-9f41-00a024bb830c";
+
+                // handle the case where there is no UserID or PW, and try IWA
+                // Doc on integrated Windows auth in SAS: http://bit.ly/14jAF7X
+                if (string.IsNullOrEmpty(UserId))
+                {
+                    obServer.BridgeSecurityPackage = "Negotiate";
+                }
+
                 _workspace = (SAS.Workspace)obObjectFactory.CreateObjectByServer(
                     Name, true, 
-                    obServer, 
-                    UserId, 
-                    Password);
+                    obServer,
+                    // if trying IWA, pass null in
+                    // otherwise try supplied credentials
+                    string.IsNullOrEmpty(UserId) ? null : UserId,
+                    string.IsNullOrEmpty(Password) ? null : Password);
+
+                objectKeeper.AddObject(1, Name, _workspace);
 
             }
             else
@@ -148,10 +177,12 @@ namespace SasHarness
                 // Connect using COM protocol, locally installed SAS only
                 SASObjectManager.IObjectFactory2 obObjectFactory = new SASObjectManager.ObjectFactoryMulti2();
                 SASObjectManager.ServerDef obServer = new SASObjectManager.ServerDef();
-                obServer.MachineDNSName = Host;
+                obServer.MachineDNSName = "localhost";
                 obServer.Protocol = SASObjectManager.Protocols.ProtocolCom;
                 obServer.Port = 0;
                 _workspace = (SAS.Workspace)obObjectFactory.CreateObjectByServer(Name, true, obServer, null, null);
+
+                objectKeeper.AddObject(1, Name, _workspace);
             }
         }
 

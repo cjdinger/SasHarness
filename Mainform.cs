@@ -51,11 +51,12 @@ namespace SasHarness
                         statusMsg.Text = string.Format("Connected to {0} ({1}) as {2}",
                             activeSession.Name,
                             activeSession.Host,
-                            activeSession.UserId);
+                            string.IsNullOrEmpty(activeSession.UserId) ? Environment.UserName : activeSession.UserId);
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(string.Format("Could not connect: {0}", ex.Message));
+                    statusMsg.Text = "";
                 }
             }
         }
@@ -207,6 +208,19 @@ namespace SasHarness
             RunProgram();
         }
         #endregion
+
+        private void OnOpenData_Click(object sender, EventArgs e)
+        {
+            if (activeSession != null && activeSession.IsConnected)
+            {
+                DataViewerForm dlg = new DataViewerForm(activeSession);
+                dlg.Show(this);
+            }
+            else
+            {
+                MessageBox.Show("You must connect to a SAS session before you can open data.", "Connect to SAS");
+            }
+        }
 
     }
 }

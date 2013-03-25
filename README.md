@@ -14,6 +14,11 @@ This sample application has the following features:
 - Features three windows: a program editor, a log viewer, and a listing viewer.  (Does that seem familiar?)
 - Allows you to run a SAS program on a background thread, keeping the main user interface responsive
 - Retrieves the SAS log and listing output, and colors each line of output as appropriate (errors, warnings, notes, page boundaries)
+- Provides a simple Data Set viewer: open a data set from SAS library, apply a filter (WHERE= option)
+
+## Screen shots
+![main form](https://github.com/cjdinger/SasHarness/blob/master/main.png "Main screen example")
+![data grid view](https://github.com/cjdinger/SasHarness/blob/master/datagrid.png "Data grid example")
 
 For more details, see the sasCommunity page for this paper:
 [Create Your Own Client Apps Using SAS Integration Technologies](http://www.sascommunity.org/wiki/Create_Your_Own_Client_Apps_Using_SAS_Integration_Technologies)
